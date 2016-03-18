@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 
@@ -292,6 +293,165 @@ namespace NServiceKit.OrmLite
         public static IDbConnection OpenDbConnection(this IDbConnectionFactory connectionFactory, string namedConnection)
         {
             return ((OrmLiteConnectionFactory)connectionFactory).OpenDbConnection(namedConnection);
+        }
+
+        /// <summary>An OrmLiteConnectionFactory extension method that inserts all by transaction.</summary>
+        /// <typeparam name="T">Generic type parameter.</typeparam>
+        /// <param name="factory"></param>
+        /// <param name="objs">  The objects.</param>
+        /// <param name="trans">transaction</param>
+        public static void InsertAll<T>(this OrmLiteConnectionFactory factory, IEnumerable<T> objs, IDbTransaction trans = null)
+            where T : new()
+        {
+            if (trans == null)
+            {
+                using (var dbConn = factory.OpenDbConnection())
+                {
+                    trans = dbConn.BeginTransaction();
+                    try
+                    {
+                        dbConn.Exec(dbCmd => dbCmd.InsertAll(objs));
+                        trans.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        trans.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+            else
+            {
+                trans.Connection.Exec(dbCmd => dbCmd.InsertAll(objs));
+            }
+        }
+
+        /// <summary>
+        /// An OrmLiteConnectionFactory extension method that deletes all described by transaction.
+        /// </summary>
+        /// <typeparam name="T">Generic type parameter.</typeparam>
+        /// <param name="factory"></param>
+        /// <param name="objs">  The objects.</param>
+        /// <param name="trans">transaction</param>
+        public static void DeleteAll<T>(this OrmLiteConnectionFactory factory, IEnumerable<T> objs,IDbTransaction trans=null)
+        {
+            if (trans == null)
+            {
+                using (var dbConn = factory.OpenDbConnection())
+                {
+                    trans = dbConn.BeginTransaction();
+                    try
+                    {
+                        dbConn.Exec(dbCmd => dbCmd.DeleteAll(objs));
+                        trans.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        trans.Rollback();
+                        throw ex;
+                    }
+                }
+
+            }
+            else
+            {
+                trans.Connection.Exec(dbCmd => dbCmd.DeleteAll(objs));
+            }
+        }
+
+        /// <summary>An IDbConnection extension method that deletes the by identifier.</summary>
+        /// <typeparam name="T">Generic type parameter.</typeparam>
+        /// <param name="factory"></param>
+        /// <param name="id">    The identifier.</param>
+        /// <param name="trans"></param>
+        public static void DeleteById<T>(this OrmLiteConnectionFactory factory, object id,IDbTransaction trans=null)
+            where T : new()
+        {
+            if (trans == null)
+            {
+                using (var dbConn = factory.OpenDbConnection())
+                {
+                    trans = dbConn.BeginTransaction();
+                    try
+                    {
+                        dbConn.Exec(dbCmd => dbCmd.DeleteById<T>(id));
+                        trans.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        trans.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+            else
+            {
+                trans.Connection.Exec(dbCmd => dbCmd.DeleteById<T>(id));
+            }
+        }
+
+        /// <summary>An IDbConnection extension method that deletes the by identifiers.</summary>
+        /// <typeparam name="T">Generic type parameter.</typeparam>
+        /// <param name="factory"></param>
+        /// <param name="idValues">The identifier values.</param>
+        /// <param name="trans"></param>
+        public static void DeleteByIds<T>(this OrmLiteConnectionFactory factory, IEnumerable idValues, IDbTransaction trans = null)
+            where T : new()
+        {
+            if (trans == null)
+            {
+                using (var dbConn = factory.OpenDbConnection())
+                {
+                    trans = dbConn.BeginTransaction();
+                    try
+                    {
+                        dbConn.Exec(dbCmd => dbCmd.DeleteByIds<T>(idValues));
+                        trans.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        trans.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+            else
+            {
+                trans.Connection.Exec(dbCmd => dbCmd.DeleteByIds<T>(idValues));
+            }
+        }
+
+
+        /// <summary>An OrmLiteConnectionFactory extension method that updates all by transaction.</summary>
+        /// <typeparam name="T">Generic type parameter.</typeparam>
+        /// <param name="factory"></param>
+        /// <param name="objs">  The objects.</param>
+        /// <param name="trans"></param>
+        public static void UpdateAll<T>(this OrmLiteConnectionFactory factory, IEnumerable<T> objs, IDbTransaction trans = null)
+            where T : new()
+        {
+            // dbConn.Exec(dbCmd => dbCmd.UpdateAll(objs));
+            if (trans == null)
+            {
+                using (var dbConn = factory.OpenDbConnection())
+                {
+                    trans = dbConn.BeginTransaction();
+                    try
+                    {
+                        dbConn.Exec(dbCmd => dbCmd.UpdateAll(objs));
+                        trans.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        trans.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+            else
+            {
+                trans.Connection.Exec(dbCmd => dbCmd.UpdateAll(objs));
+            }
         }
     }
 }
